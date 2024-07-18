@@ -1,0 +1,17 @@
+.row-b-bottom {
+  border-color: "#EFF3F3";
+  border-bottom-width: 4px;
+}
+/* CustomTable.css */
+.slide-down {
+  animation: slideDown 0.5s ease;
+}
+
+@keyframes slideDown {
+  0% {
+    transform: translateY(-100%);
+  }
+  100% {
+    transform: translateY(0);
+  }
+}

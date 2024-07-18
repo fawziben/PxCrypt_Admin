@@ -1,0 +1,15 @@
+.user-details {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 0;
+  height: 100%;
+  background-color: #ffffff;
+  overflow: hidden;
+  transition: width 0.3s ease-in-out;
+  z-index: 1;
+}
+
+.user-details.open {
+  width: 100%;
+}
