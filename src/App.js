@@ -8,6 +8,7 @@ import { CssBaseline } from "@mui/material";
 import DataTable from "./Components/UsersCustomTable";
 import UserDetails from "./Components/UserDetails";
 import "./App.css";
+import UserGroups from "./Pages/UserGroups";
 
 function App() {
   return (
@@ -20,7 +21,7 @@ function App() {
             <Route index element={<UsersTable />} />
             <Route path="sharedfiles" element={<DataTable></DataTable>} />
 
-            <Route path="analytics" element={<UserDetails></UserDetails>} />
+            <Route path="analytics" element={<UserGroups></UserGroups>} />
             <Route path="groups" element={<LoginPage></LoginPage>} />
           </Route>
         </Routes>
