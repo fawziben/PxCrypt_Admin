@@ -19,7 +19,16 @@ const SmallAvatar = styled(Avatar)(({ theme }) => ({
 
 const changeUserState = async (id) => {
   try {
-    const response = await axiosInstance.put(`users/block/${id}`, null);
+    let accessToken = sessionStorage.getItem("token");
+    const response = await axiosInstance.put(
+      `users/block/${id}`,
+      {},
+      {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      }
+    );
 
     console.log(response);
 
@@ -27,6 +36,28 @@ const changeUserState = async (id) => {
       console.log("user blocked successfully");
     } else {
       console.log("Error while blocking this user");
+    }
+  } catch (error) {
+    console.log("Error:", error);
+  }
+};
+
+const deleteUser = async (id, setUsers) => {
+  try {
+    let accessToken = sessionStorage.getItem("token");
+    const response = await axiosInstance.delete(`users/${id}`, {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+
+    console.log(response);
+
+    if (response.status === 204) {
+      console.log("user Deleted successfully");
+      setUsers((prevUsers) => prevUsers.filter((user) => user.id !== id));
+    } else {
+      console.log("Error while deleting this user");
     }
   } catch (error) {
     console.log("Error:", error);
@@ -95,6 +126,10 @@ export default function UsersTable() {
   const handleDeleteUser = (userId) => {
     // Logique de suppression de l'utilisateur
     console.log(`Deleting user with ID ${userId}`);
+
+    // // Filtrez l'utilisateur supprimé de l'état local
+    // setUsers((prevUsers) => prevUsers.filter((user) => user.id !== userId));
+    deleteUser(userId, setUsers);
   };
 
   const handleBlockUser = async (userId) => {

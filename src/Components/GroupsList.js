@@ -5,9 +5,16 @@ import {
   Box,
   InputAdornment,
   TextField,
+  Popover,
+  Typography,
+  Button,
+  MenuItem,
+  Select,
+  FormControl,
+  InputLabel,
 } from "@mui/material";
 import AddGroup from "./AddGroup";
-import { DeleteOutline, Search } from "@mui/icons-material";
+import { DeleteOutline, Search, Settings } from "@mui/icons-material";
 import { axiosInstance } from "../AxiosInstance";
 
 async function deleteGroup(group_id) {
@@ -34,6 +41,10 @@ const GroupsList = ({
   setGroups,
 }) => {
   const [searchTerm, setSearchTerm] = useState("");
+  const [anchorEl, setAnchorEl] = useState(null); // Pour le Popover
+  const [selectedGroup, setSelectedGroup] = useState(null);
+  const [duration, setDuration] = useState(""); // Durée définie par l'utilisateur
+  const [timeUnit, setTimeUnit] = useState("days"); // Unité de temps (par défaut: jours)
 
   const handleGroupClick = (groupId, users, title, description) => {
     const originalIndex = groups.findIndex((group) => group.id === groupId);
@@ -58,6 +69,26 @@ const GroupsList = ({
     setGroups(updatedGroups);
     setUsers([]);
     setGroupIndex(null);
+  };
+
+  const handleSettingsClick = (event, group) => {
+    event.stopPropagation(); // Empêche l'événement de clic d'affecter d'autres éléments
+    setAnchorEl(event.currentTarget);
+    setSelectedGroup(group);
+  };
+
+  const handlePopoverClose = () => {
+    setAnchorEl(null);
+    setDuration("");
+    setTimeUnit("days");
+  };
+
+  const handleSetTimeResidency = () => {
+    // Logique pour enregistrer la durée de résidence des fichiers
+    console.log(
+      `Setting time residency for group ${selectedGroup.id}: ${duration} ${timeUnit}`
+    );
+    handlePopoverClose(); // Ferme le Popover après la sélection
   };
 
   return (
@@ -104,8 +135,8 @@ const GroupsList = ({
                 )
               }
             >
-              <div className="max-w-full break-words flex">
-                <div className="grow">
+              <div className="max-w-full flex justify-between items-center">
+                <div className="flex-grow max-w-full overflow-hidden">
                   <div className="font-bold">Groupe : {group.title}</div>
                   <div className="mb-2.5">
                     <b>Description :</b> {group.description}
@@ -126,7 +157,8 @@ const GroupsList = ({
                     </AvatarGroup>
                   </div>
                 </div>
-                <div>
+                <div className="flex items-center space-x-2 min-w-[56px] justify-end">
+                  <Settings onClick={(e) => handleSettingsClick(e, group)} />
                   <DeleteOutline
                     onClick={(e) => handleGroupDelete(e, group.id)}
                     sx={{
@@ -137,7 +169,7 @@ const GroupsList = ({
                         color: "red",
                       },
                     }}
-                  ></DeleteOutline>
+                  />
                 </div>
               </div>
             </div>
@@ -152,6 +184,51 @@ const GroupsList = ({
       >
         <AddGroup setGroups={setGroups} groups={groups} />
       </Box>
+      <Popover
+        open={Boolean(anchorEl)}
+        anchorEl={anchorEl}
+        onClose={handlePopoverClose}
+        anchorOrigin={{
+          vertical: "bottom",
+          horizontal: "center",
+        }}
+        transformOrigin={{
+          vertical: "top",
+          horizontal: "center",
+        }}
+      >
+        <Box p={2}>
+          <Typography variant="h6">Set File's Time Residency</Typography>
+          <TextField
+            label="Duration"
+            type="number"
+            value={duration}
+            onChange={(e) => setDuration(e.target.value)}
+            fullWidth
+            margin="normal"
+          />
+          <FormControl fullWidth margin="normal">
+            <InputLabel id="time-unit-label">Time Unit</InputLabel>
+            <Select
+              labelId="time-unit-label"
+              value={timeUnit}
+              onChange={(e) => setTimeUnit(e.target.value)}
+            >
+              <MenuItem value="days">Days</MenuItem>
+              <MenuItem value="weeks">Weeks</MenuItem>
+              <MenuItem value="months">Months</MenuItem>
+            </Select>
+          </FormControl>
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={handleSetTimeResidency}
+            disabled={!duration}
+          >
+            Set
+          </Button>
+        </Box>
+      </Popover>
     </div>
   );
 };

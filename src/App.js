@@ -9,10 +9,22 @@ import DataTable from "./Components/UsersCustomTable";
 import UserDetails from "./Components/UserDetails";
 import "./App.css";
 import UserGroups from "./Pages/UserGroups";
+import { ThemeProvider, createTheme } from "@mui/material/styles";
+
+const customTheme = createTheme({
+  palette: {
+    primary: {
+      main: "#27535E",
+    },
+  },
+  typography: {
+    fontFamily: "'Outfit', sans-serif",
+  },
+});
 
 function App() {
   return (
-    <div className="App">
+    <ThemeProvider theme={customTheme}>
       <CssBaseline />
       <BrowserRouter>
         <Routes>
@@ -26,7 +38,7 @@ function App() {
           </Route>
         </Routes>
       </BrowserRouter>
-    </div>
+    </ThemeProvider>
   );
 }
 
