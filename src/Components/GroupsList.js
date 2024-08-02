@@ -31,6 +31,34 @@ async function deleteGroup(group_id) {
   }
 }
 
+const updateTimeResidency = async (groupId, newTime, onSuccess) => {
+  try {
+    console.log(newTime);
+
+    const accessToken = sessionStorage.getItem("token");
+    const response = await axiosInstance.put(
+      `/groups/admin/update/time_residency/${groupId}`,
+      { time_residency: newTime },
+      {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    console.log(response.data); // Message indiquant la mise à jour réussie
+
+    // Appeler le callback onSuccess après une mise à jour réussie
+    if (onSuccess) onSuccess(response.data);
+  } catch (error) {
+    console.error(
+      "Erreur lors de la mise à jour du temps de residence du groupe :",
+      error
+    );
+  }
+};
+
 const GroupsList = ({
   groupIndex,
   setGroupIndex,
@@ -75,6 +103,7 @@ const GroupsList = ({
     event.stopPropagation(); // Empêche l'événement de clic d'affecter d'autres éléments
     setAnchorEl(event.currentTarget);
     setSelectedGroup(group);
+    setDuration(group.time_residency);
   };
 
   const handlePopoverClose = () => {
@@ -85,10 +114,26 @@ const GroupsList = ({
 
   const handleSetTimeResidency = () => {
     // Logique pour enregistrer la durée de résidence des fichiers
+
     console.log(
       `Setting time residency for group ${selectedGroup.id}: ${duration} ${timeUnit}`
     );
-    handlePopoverClose(); // Ferme le Popover après la sélection
+
+    // Convertir la durée en nombre entier
+    const timeResidency = parseInt(duration, 10);
+
+    updateTimeResidency(selectedGroup.id, timeResidency, (data) => {
+      // Mettre à jour le groupe dans l'état local
+      const updatedGroups = groups.map((group) =>
+        group.id === selectedGroup.id
+          ? { ...group, time_residency: timeResidency }
+          : group
+      );
+      setGroups(updatedGroups);
+
+      // Fermer le Popover après la mise à jour
+      handlePopoverClose();
+    });
   };
 
   return (
@@ -206,6 +251,7 @@ const GroupsList = ({
             onChange={(e) => setDuration(e.target.value)}
             fullWidth
             margin="normal"
+            inputProps={{ min: 1 }}
           />
           <FormControl fullWidth margin="normal">
             <InputLabel id="time-unit-label">Time Unit</InputLabel>
@@ -215,8 +261,8 @@ const GroupsList = ({
               onChange={(e) => setTimeUnit(e.target.value)}
             >
               <MenuItem value="days">Days</MenuItem>
-              <MenuItem value="weeks">Weeks</MenuItem>
-              <MenuItem value="months">Months</MenuItem>
+              {/* <MenuItem value="weeks">Weeks</MenuItem>
+              <MenuItem value="months">Months</MenuItem> */}
             </Select>
           </FormControl>
           <Button
