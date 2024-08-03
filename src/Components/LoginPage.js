@@ -74,7 +74,7 @@ const LoginPage = () => {
 
   return (
     <LoginContainer maxWidth="100%">
-      <div style={{ width: "40%" }}>
+      <div style={{ width: "30%" }}>
         <Form component="form" onSubmit={handleLogin}>
           {/* <Typography variant="h4" component="h1" gutterBottom>
             Log-in

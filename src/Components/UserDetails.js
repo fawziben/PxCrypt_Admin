@@ -11,12 +11,15 @@ import {
   LinearProgress,
   TextField,
   Button,
+  MenuItem,
+  Select,
 } from "@mui/material";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import { axiosInstance } from "../AxiosInstance";
-import { teal, grey, red } from "@mui/material/colors";
+import { teal, grey } from "@mui/material/colors";
+import { convertSize } from "../utils";
 
-async function getFileStats(setFileCounts, id) {
+async function getFileStats(setFileCounts, setUsedStorage, id) {
   try {
     let accessToken = sessionStorage.getItem("token");
     const response = await axiosInstance.get(`stats/file-counts/${id}`, {
@@ -26,6 +29,8 @@ async function getFileStats(setFileCounts, id) {
     });
     if (response && response.data) {
       setFileCounts(response.data);
+      console.log(response.data.total_uploaded_size);
+      setUsedStorage(response.data.total_uploaded_size);
     }
   } catch (e) {
     alert(e);
@@ -34,11 +39,13 @@ async function getFileStats(setFileCounts, id) {
 
 const UserDetails = ({ user }) => {
   const [fileCounts, setFileCounts] = useState();
-  const [usedStorage, setUsedStorage] = useState(20); // Used storage in MB
-  const [totalStorage, setTotalStorage] = useState(100); // Total storage in MB
+  const [usedStorage, setUsedStorage] = useState();
+  const [totalStorage, setTotalStorage] = useState(user.storage);
+  const [storageUnit, setStorageUnit] = useState("MB"); // Default unit is MB
+  const [newStorage, setNewStorage] = useState();
 
   useEffect(() => {
-    getFileStats(setFileCounts, user.id);
+    getFileStats(setFileCounts, setUsedStorage, user.id);
   }, [user.id]);
 
   const handleViewFiles = (type) => {
@@ -46,28 +53,45 @@ const UserDetails = ({ user }) => {
   };
 
   const handleChangeStorageLimit = (e) => {
-    const newLimit = Math.max(50, Number(e.target.value)); // Ensure minimum is 50 MB
-    setTotalStorage(newLimit);
+    const value = Number(e.target.value);
+    setNewStorage(value);
   };
 
-  const handleSaveStorageLimit = async () => {
-    try {
-      let accessToken = sessionStorage.getItem("token");
-      await axiosInstance.post(
-        `storage/update`,
-        {
-          userId: user.id,
-          newLimit: totalStorage,
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-          },
-        }
+  const handleUnitChange = (e) => {
+    const newUnit = e.target.value;
+    setStorageUnit(newUnit);
+  };
+
+  const handleSaveStorageLimit = async (id) => {
+    let newLimitInBytes;
+    if (storageUnit === "GB") {
+      newLimitInBytes = newStorage * 1024 * 1024 * 1024; // Convert GB to bytes
+    } else {
+      newLimitInBytes = newStorage * 1024 * 1024; // Convert MB to bytes
+    }
+    if (newLimitInBytes < usedStorage) {
+      alert(
+        "Le nouveau stockage ne peut etre inferieur au stockage utilise stockage "
       );
-      alert("Storage limit updated successfully!");
-    } catch (e) {
-      alert("Error updating storage limit.");
+    } else {
+      setTotalStorage(newLimitInBytes);
+      try {
+        let accessToken = sessionStorage.getItem("token");
+        await axiosInstance.put(
+          `users/admin/update/storage/${id}`,
+          {
+            storage: newLimitInBytes,
+          },
+          {
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+            },
+          }
+        );
+        alert("Storage limit updated successfully!");
+      } catch (e) {
+        alert("Error updating storage limit.");
+      }
     }
   };
 
@@ -143,6 +167,9 @@ const UserDetails = ({ user }) => {
             <Typography variant="body2">
               Last Connection: <strong>{user.lastConnection}</strong>
             </Typography>
+            <Typography variant="body2">
+              Time Residency: <strong>{user.time_residency + " days"}</strong>
+            </Typography>
           </Card>
         </Grid>
       </Grid>
@@ -208,29 +235,44 @@ const UserDetails = ({ user }) => {
         </Typography>
         <Divider sx={{ mb: 2 }} />
         <Typography variant="body2">
-          Used Storage: <strong>{usedStorage} MB</strong>
+          Used Storage: <strong>{convertSize(usedStorage)}</strong>
         </Typography>
         <Typography variant="body2">
-          Total Storage: <strong>{totalStorage} MB</strong>
+          Total Storage: <strong>{convertSize(totalStorage)}</strong>
         </Typography>
         <LinearProgress
           variant="determinate"
           value={(usedStorage / totalStorage) * 100}
           sx={{ height: 20, borderRadius: 5, my: 2 }}
         />
-        <TextField
-          type="number"
-          label="Change Storage Limit"
-          variant="outlined"
-          value={totalStorage}
-          onChange={handleChangeStorageLimit}
-          fullWidth
-          inputProps={{ min: 50 }}
-        />
+        <Grid container spacing={2}>
+          <Grid item xs={8}>
+            <TextField
+              type="number"
+              label="Change Storage Limit"
+              variant="outlined"
+              value={newStorage}
+              onChange={handleChangeStorageLimit}
+              fullWidth
+              inputProps={{ min: 50 }}
+            />
+          </Grid>
+          <Grid item xs={4}>
+            <Select
+              value={storageUnit}
+              onChange={handleUnitChange}
+              variant="outlined"
+              fullWidth
+            >
+              <MenuItem value="MB">MB</MenuItem>
+              <MenuItem value="GB">GB</MenuItem>
+            </Select>
+          </Grid>
+        </Grid>
         <Button
           variant="contained"
           color="primary"
-          onClick={handleSaveStorageLimit}
+          onClick={() => handleSaveStorageLimit(user.id)}
           sx={{ mt: 2 }}
         >
           Save Changes

@@ -99,6 +99,8 @@ export default function UsersTable() {
           img_src: user.img_src,
           createdAt: formatDate(user.created_at),
           status: user.state, // Utilisez le statut réel de l'utilisateur ici
+          time_residency: user.time_residency,
+          storage: user.storage,
         }));
         setUsers(usersData);
       }
