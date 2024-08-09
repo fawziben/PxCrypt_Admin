@@ -1,10 +1,22 @@
 // LoginPage.js
 import React, { useState } from "react";
-import { Container, TextField, Button, Typography, Box } from "@mui/material";
+import {
+  Container,
+  TextField,
+  Button,
+  Typography,
+  Box,
+  Dialog,
+  DialogTitle,
+  IconButton,
+  DialogContent,
+} from "@mui/material";
 import { styled } from "@mui/system";
 import { blue } from "@mui/material/colors";
 import { useNavigate } from "react-router-dom";
 import { axiosInstance } from "../AxiosInstance";
+import { Close, ClosedCaption } from "@mui/icons-material";
+import OTPFile from "./OTPFile";
 
 const classes = {
   arrowButton: {
@@ -49,12 +61,18 @@ const StyledButton = styled(Button)({
 const LoginPage = () => {
   const [username, setUsername] = useState(""); // État pour stocker l'email
   const [password, setPassword] = useState(""); // État pour stocker le mot de passe
+  const [otp, setOtp] = useState(false);
+
   const navigate = useNavigate(); // Initialisation du hook de navigation
+
+  const handleClose = () => {
+    setOtp(false); // Fermeture de la boîte de dialogue
+  };
 
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
-      const response = await axiosInstance.post("/admin/login", {
+      const response = await axiosInstance.post("/admin/email", {
         username,
         password,
       });
@@ -62,8 +80,9 @@ const LoginPage = () => {
       console.log(response);
 
       if (response.status === 200) {
-        sessionStorage.setItem("token", response.data.access_token); // Assurez-vous que le token est stocké
-        navigate("dashboard");
+        setOtp(true);
+        // sessionStorage.setItem("token", response.data.access_token); // Assurez-vous que le token est stocké
+        // navigate("dashboard");
       } else {
         console.log("Invalid credentials");
       }
@@ -115,6 +134,20 @@ const LoginPage = () => {
           </StyledButton>
         </Form>
       </div>
+      <Dialog open={otp} onClose={handleClose}>
+        <DialogTitle>
+          <IconButton
+            aria-label="close"
+            onClick={handleClose}
+            sx={classes.closeButton}
+          >
+            <Close />
+          </IconButton>
+        </DialogTitle>
+        <DialogContent>
+          <OTPFile email={username} />
+        </DialogContent>
+      </Dialog>
     </LoginContainer>
   );
 };
