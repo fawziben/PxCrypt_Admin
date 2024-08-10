@@ -10,6 +10,7 @@ import UserDetails from "./Components/UserDetails";
 import "./App.css";
 import UserGroups from "./Pages/UserGroups";
 import { ThemeProvider, createTheme } from "@mui/material/styles";
+import { NotificationsPage } from "./Components/NotificationsPage";
 
 const customTheme = createTheme({
   palette: {
@@ -31,7 +32,10 @@ function App() {
           <Route exact path="/" element={<LoginPage></LoginPage>} />
           <Route path="dashboard" element={<Layout />}>
             <Route index element={<UsersTable />} />
-            <Route path="sharedfiles" element={<DataTable></DataTable>} />
+            <Route
+              path="sharedfiles"
+              element={<NotificationsPage></NotificationsPage>}
+            />
 
             <Route path="analytics" element={<UserGroups></UserGroups>} />
             <Route path="groups" element={<LoginPage></LoginPage>} />

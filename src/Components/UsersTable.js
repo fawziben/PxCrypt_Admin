@@ -179,7 +179,7 @@ export default function UsersTable() {
       flex: 1,
       cellClassName: "status-cell",
       renderCell: (params) => (
-        <SmallAvatar sx={{ bgcolor: params.value ? "green" : "orange" }}>
+        <SmallAvatar sx={{ bgcolor: params.value ? "green" : "red" }}>
           {params.value ? "A" : "B"}
         </SmallAvatar>
       ),

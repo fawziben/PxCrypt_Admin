@@ -1,0 +1,36 @@
+.tableCore {
+  width: 964px;
+  height: 562px;
+  font-family: "Poppins";
+}
+
+tbody {
+  padding: 10px;
+  font-style: normal;
+  font-weight: 400;
+  font-size: 12px;
+  line-height: 18px;
+  color: #555555;
+}
+
+tr:nth-child(even) {
+  background-color: #ffffff;
+}
+
+/* Apply a white background to odd rows */
+tr:nth-child(odd) {
+  background-color: #f4f4f4;
+}
+
+/* Assuming you are using Tailwind CSS for utility classes */
+.flex-1 {
+  flex: 1;
+}
+
+.overflow-hidden {
+  overflow: hidden;
+}
+
+.h-screen {
+  height: 100vh;
+}
