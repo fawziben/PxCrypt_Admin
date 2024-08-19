@@ -3,12 +3,13 @@ import { DataGrid } from "@mui/x-data-grid";
 import { axiosInstance } from "../AxiosInstance";
 import Avatar from "@mui/material/Avatar";
 import { styled } from "@mui/material/styles";
-import { IconButton, Tooltip } from "@mui/material";
+import { IconButton, Tooltip, Typography } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
 import BlockIcon from "@mui/icons-material/Block";
 import { CheckCircle, ExpandMore } from "@mui/icons-material";
 import UserDetails from "./UserDetails"; // Importez le composant UserDetails
 import { useTransition, animated } from "react-spring"; // Importez useTransition et animated depuis react-spring
+import { teal } from "@mui/material/colors";
 
 const SmallAvatar = styled(Avatar)(({ theme }) => ({
   width: theme.spacing(4),
@@ -232,8 +233,14 @@ export default function UsersTable() {
   return (
     <div
       className="w-full h-full overflow-y-auto"
-      style={{ marginTop: "100px" }}
+      style={{ marginTop: "30px" }}
     >
+      <Typography
+        variant="h4"
+        sx={{ mb: 3, color: teal[800], marginLeft: "20px" }}
+      >
+        Users
+      </Typography>
       <div
         style={{
           height: `${containerHeight}px`,
