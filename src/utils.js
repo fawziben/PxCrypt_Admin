@@ -24,3 +24,21 @@ export const formatSize = (sizeInBits) => {
 
   return `${size.toFixed(2)} ${units[unitIndex]}`;
 };
+
+export const validateEmail = (email) => {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+  return emailRegex.test(email);
+};
+
+export const validatePhoneNumber = (phoneNumber) => {
+  const phoneRegex = /^0[567][0-9]{8}$/;
+
+  return phoneRegex.test(phoneNumber);
+};
+export const validatePasswordPolicy = (password) => {
+  // Au moins 12 caractères, une majuscule, une minuscule, un chiffre et un caractère spécial
+  const regex =
+    /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{12,}$/;
+  return regex.test(password);
+};

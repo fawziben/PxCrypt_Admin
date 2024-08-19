@@ -286,6 +286,7 @@ export default function UsersTable() {
             >
               <UserDetails
                 user={users.find((user) => user.id === item)}
+                setUsers={setUsers}
                 onClose={handleCloseDetails}
               />
             </animated.div>

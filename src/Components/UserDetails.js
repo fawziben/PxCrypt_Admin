@@ -15,9 +15,16 @@ import {
   Select,
 } from "@mui/material";
 import VisibilityIcon from "@mui/icons-material/Visibility";
+import EditIcon from "@mui/icons-material/Edit";
+import SaveIcon from "@mui/icons-material/Save";
 import { axiosInstance } from "../AxiosInstance";
 import { teal, grey } from "@mui/material/colors";
-import { convertSize } from "../utils";
+import {
+  convertSize,
+  validateEmail,
+  validatePasswordPolicy,
+  validatePhoneNumber,
+} from "../utils";
 
 async function getFileStats(setFileCounts, setUsedStorage, id) {
   try {
@@ -37,16 +44,90 @@ async function getFileStats(setFileCounts, setUsedStorage, id) {
   }
 }
 
-const UserDetails = ({ user }) => {
+const UserDetails = ({ user, setUsers }) => {
   const [fileCounts, setFileCounts] = useState();
   const [usedStorage, setUsedStorage] = useState();
   const [totalStorage, setTotalStorage] = useState(user.storage);
   const [storageUnit, setStorageUnit] = useState("MB"); // Default unit is MB
   const [newStorage, setNewStorage] = useState();
 
+  const [editMode, setEditMode] = useState(false);
+  const [editableUser, setEditableUser] = useState({ ...user });
+
   useEffect(() => {
     getFileStats(setFileCounts, setUsedStorage, user.id);
   }, [user.id]);
+
+  const handleEditClick = () => {
+    setEditMode(!editMode);
+  };
+
+  const handleEditSave = () => {
+    setEditMode(!editMode);
+    handleSaveChanges();
+  };
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setEditableUser((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  const handleSaveChanges = async () => {
+    try {
+      console.log(editableUser);
+      if (!validateEmail(editableUser.email)) {
+        alert("Incorrect email address");
+        return;
+      }
+      if (!validatePhoneNumber(editableUser.phoneNumber)) {
+        alert("Incorrect phone number");
+        return;
+      }
+      if (
+        editableUser.password &&
+        !validatePasswordPolicy(editableUser.password)
+      ) {
+        alert(
+          "Password must contain at least 12 characters (uppercase, lowercase, digit, and special character)"
+        );
+        return;
+      }
+      let accessToken = sessionStorage.getItem("token");
+      const response = await axiosInstance.put(
+        `admin/update_user/${user.id}`,
+        {
+          firstName: editableUser.firstName,
+          lastName: editableUser.lastName,
+          email: editableUser.email,
+          phoneNumber: editableUser.phoneNumber,
+          time_residency: editableUser.time_residency,
+          password: editableUser.password,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        }
+      );
+
+      if (response.status === 200) {
+        alert("User information updated successfully!");
+
+        // Mettre à jour l'utilisateur modifié dans la liste `users`
+        setUsers((prevUsers) =>
+          prevUsers.map((u) =>
+            u.id === user.id ? { ...u, ...editableUser } : u
+          )
+        );
+        setEditMode(false);
+      }
+    } catch (e) {
+      alert("Error updating user information.");
+    }
+  };
 
   const handleViewFiles = (type) => {
     console.log(`Viewing ${type} files for user with ID: ${user.id}`);
@@ -70,9 +151,7 @@ const UserDetails = ({ user }) => {
       newLimitInBytes = newStorage * 1024 * 1024; // Convert MB to bytes
     }
     if (newLimitInBytes < usedStorage) {
-      alert(
-        "Le nouveau stockage ne peut etre inferieur au stockage utilise stockage "
-      );
+      alert("Le nouveau stockage ne peut être inférieur au stockage utilisé.");
     } else {
       setTotalStorage(newLimitInBytes);
       try {
@@ -116,7 +195,7 @@ const UserDetails = ({ user }) => {
               mr: 2,
             }}
           />
-          <Box>
+          <Box sx={{ flexGrow: 1 }}>
             <Typography
               variant="h5"
               sx={{ fontWeight: "bold", color: teal[800] }}
@@ -127,6 +206,13 @@ const UserDetails = ({ user }) => {
               {user.email}
             </Typography>
           </Box>
+          <IconButton>
+            {editMode ? (
+              <SaveIcon onClick={handleEditSave} />
+            ) : (
+              <EditIcon onClick={handleEditClick} />
+            )}
+          </IconButton>
         </CardContent>
       </Card>
 
@@ -138,16 +224,60 @@ const UserDetails = ({ user }) => {
             </Typography>
             <Divider sx={{ mb: 2 }} />
             <Typography variant="body2">
-              First Name: <strong>{user.firstName}</strong>
+              First Name:{" "}
+              {editMode ? (
+                <TextField
+                  name="firstName"
+                  value={editableUser.firstName}
+                  onChange={handleInputChange}
+                  fullWidth
+                  size="small"
+                />
+              ) : (
+                <strong>{user.firstName}</strong>
+              )}
             </Typography>
             <Typography variant="body2">
-              Last Name: <strong>{user.lastName}</strong>
+              Last Name:{" "}
+              {editMode ? (
+                <TextField
+                  name="lastName"
+                  value={editableUser.lastName}
+                  onChange={handleInputChange}
+                  fullWidth
+                  size="small"
+                />
+              ) : (
+                <strong>{user.lastName}</strong>
+              )}
             </Typography>
             <Typography variant="body2">
-              Email: <strong>{user.email}</strong>
+              Email:{" "}
+              {editMode ? (
+                <TextField
+                  name="email"
+                  value={editableUser.email}
+                  onChange={handleInputChange}
+                  fullWidth
+                  size="small"
+                />
+              ) : (
+                <strong>{user.email}</strong>
+              )}
             </Typography>
             <Typography variant="body2">
-              Phone: <strong>{user.phoneNumber}</strong>
+              Phone:{" "}
+              {editMode ? (
+                <TextField
+                  name="phoneNumber"
+                  value={editableUser.phoneNumber}
+                  onChange={handleInputChange}
+                  fullWidth
+                  size="small"
+                />
+              ) : (
+                <strong>{user.phoneNumber}</strong>
+              )}
             </Typography>
           </Card>
         </Grid>
@@ -159,7 +289,19 @@ const UserDetails = ({ user }) => {
             </Typography>
             <Divider sx={{ mb: 2 }} />
             <Typography variant="body2">
-              Password: <strong>************</strong>
+              Password:{" "}
+              {editMode ? (
+                <TextField
+                  name="password"
+                  value={editableUser.password}
+                  onChange={handleInputChange}
+                  fullWidth
+                  size="small"
+                  type="password"
+                />
+              ) : (
+                <strong>************</strong>
+              )}
             </Typography>
             <Typography variant="body2">
               Created At: <strong>{user.createdAt}</strong>
@@ -168,7 +310,20 @@ const UserDetails = ({ user }) => {
               Last Connection: <strong>{user.lastConnection}</strong>
             </Typography>
             <Typography variant="body2">
-              Time Residency: <strong>{user.time_residency + " days"}</strong>
+              Time Residency:{" "}
+              {editMode ? (
+                <TextField
+                  name="time_residency"
+                  value={editableUser.time_residency}
+                  onChange={handleInputChange}
+                  fullWidth
+                  size="small"
+                  type="number"
+                  inputProps={{ min: 1 }}
+                />
+              ) : (
+                <strong>{user.time_residency + " days"}</strong>
+              )}
             </Typography>
           </Card>
         </Grid>
