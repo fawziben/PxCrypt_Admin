@@ -35,13 +35,13 @@ import { axiosInstance } from "../AxiosInstance";
 import { convertSize } from "../utils";
 
 // Static data for file extensions
-const fileExtensionsData = [
-  { extension: ".pdf", count: 20 },
-  { extension: ".docx", count: 15 },
-  { extension: ".xlsx", count: 10 },
-  { extension: ".jpg", count: 25 },
-  { extension: ".png", count: 30 },
-];
+// const fileExtensionsData = [
+//   { extension: ".pdf", count: 20 },
+//   { extension: ".docx", count: 15 },
+//   { extension: ".xlsx", count: 10 },
+//   { extension: ".jpg", count: 25 },
+//   { extension: ".png", count: 30 },
+// ];
 
 const colors = [teal[500], grey[400]];
 
@@ -62,6 +62,7 @@ const StatsPage = () => {
   const [userStorageData, setUserStorageData] = useState([]);
   const [open, setOpen] = useState(false);
   const [serverStats, setServerStats] = useState(null);
+  const [fileExtensionsData, setFileExtensionsData] = useState([]);
 
   const handleClickOpen = () => {
     setOpen(true);
@@ -107,6 +108,25 @@ const StatsPage = () => {
     }
   }
 
+  async function getFileExtensions() {
+    try {
+      let accessToken = sessionStorage.getItem("token");
+
+      const response = await axiosInstance.get(`stats/file_extensions`, {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+
+      if (response.status === 200) {
+        alert(response.data[1].extension);
+        setFileExtensionsData(response.data);
+      }
+    } catch (e) {
+      alert(e);
+    }
+  }
+
   // Format data for bar chart (in bytes)
   const formatBarChartData = (data) => {
     return data.map((item) => ({
@@ -141,6 +161,7 @@ const StatsPage = () => {
   useEffect(() => {
     getServerStats();
     getUsersStorage();
+    getFileExtensions();
   }, []);
 
   const pieData = serverStats

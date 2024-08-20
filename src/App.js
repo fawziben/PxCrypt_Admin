@@ -12,6 +12,7 @@ import UserGroups from "./Pages/UserGroups";
 import { ThemeProvider, createTheme } from "@mui/material/styles";
 import { NotificationsPage } from "./Components/NotificationsPage";
 import StatisticsPage from "./Components/StatisticsPage";
+import SettingsPage from "./Pages/SettingPage";
 
 const customTheme = createTheme({
   palette: {
@@ -40,6 +41,7 @@ function App() {
 
             <Route path="analytics" element={<UserGroups></UserGroups>} />
             <Route path="groups" element={<StatisticsPage></StatisticsPage>} />
+            <Route path="settings" element={<SettingsPage></SettingsPage>} />
           </Route>
         </Routes>
       </BrowserRouter>

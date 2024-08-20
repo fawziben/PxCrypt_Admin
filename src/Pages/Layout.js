@@ -105,7 +105,7 @@ export default function Layout({ children }) {
           sx={{ color: "#000000", ...classes.drawerIcons }}
         />
       ),
-      path: "/add",
+      path: "/dashboard/settings",
     },
     // {
     //   text: "Log Out",
