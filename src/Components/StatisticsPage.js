@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Box,
   Grid,
@@ -31,20 +31,8 @@ import {
   Tooltip,
   Legend,
 } from "recharts";
-
-// Static data for testing
-const statsData = {
-  activeUsers: 150,
-  blockedUsers: 20,
-  totalUsers: 170,
-  totalStorageUsed: 500, // in GB
-};
-
-// Static data for user storage
-const userStorageData = Array.from({ length: 25 }, (_, i) => ({
-  name: `User ${i + 1}`,
-  storageUsed: Math.floor(Math.random() * 50) + 1, // Random storage usage between 1 and 50 GB
-}));
+import { axiosInstance } from "../AxiosInstance";
+import { convertSize } from "../utils";
 
 // Static data for file extensions
 const fileExtensionsData = [
@@ -53,18 +41,27 @@ const fileExtensionsData = [
   { extension: ".xlsx", count: 10 },
   { extension: ".jpg", count: 25 },
   { extension: ".png", count: 30 },
-  // Add more file extensions as needed
-];
-
-const pieData = [
-  { name: "Active Users", value: statsData.activeUsers },
-  { name: "Blocked Users", value: statsData.blockedUsers },
 ];
 
 const colors = [teal[500], grey[400]];
 
+const formatStorage = (bytes) => {
+  if (bytes >= 1e9) {
+    return `${(bytes / 1e9).toFixed(2)} GB`;
+  }
+  if (bytes >= 1e6) {
+    return `${(bytes / 1e6).toFixed(2)} MB`;
+  }
+  if (bytes >= 1e3) {
+    return `${(bytes / 1e3).toFixed(2)} KB`;
+  }
+  return `${bytes} Bytes`;
+};
+
 const StatsPage = () => {
+  const [userStorageData, setUserStorageData] = useState([]);
   const [open, setOpen] = useState(false);
+  const [serverStats, setServerStats] = useState(null);
 
   const handleClickOpen = () => {
     setOpen(true);
@@ -74,11 +71,84 @@ const StatsPage = () => {
     setOpen(false);
   };
 
-  // Limit the data displayed in the BarChart
-  const barChartData = userStorageData.slice(0, 20);
+  async function getServerStats() {
+    try {
+      let accessToken = sessionStorage.getItem("token");
 
-  // Define a fixed height for the charts
-  const cardContentHeight = 400; // You can adjust this height as needed
+      const response = await axiosInstance.get(`stats/server_stats`, {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+
+      if (response.status === 200) {
+        setServerStats(response.data);
+      }
+    } catch (e) {
+      alert(e);
+    }
+  }
+
+  async function getUsersStorage() {
+    try {
+      let accessToken = sessionStorage.getItem("token");
+
+      const response = await axiosInstance.get(`stats/user_storage`, {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+
+      if (response.status === 200) {
+        setUserStorageData(response.data);
+      }
+    } catch (e) {
+      alert(e);
+    }
+  }
+
+  // Format data for bar chart (in bytes)
+  const formatBarChartData = (data) => {
+    return data.map((item) => ({
+      ...item,
+      storage_used: item.storage_used, // Assume this is in bytes
+    }));
+  };
+
+  // Format the data for the tooltip
+  const formatTooltipValue = (value) => {
+    return formatStorage(value);
+  };
+
+  const barChartData = formatBarChartData(userStorageData.slice(0, 20));
+
+  const CustomTooltip = ({ payload }) => {
+    if (payload && payload.length) {
+      const { value } = payload[0];
+      return (
+        <Box
+          sx={{ p: 1, bgcolor: grey[900], color: grey[50], borderRadius: 1 }}
+        >
+          <Typography>{`Storage Used: ${formatTooltipValue(
+            value
+          )}`}</Typography>
+        </Box>
+      );
+    }
+    return null;
+  };
+
+  useEffect(() => {
+    getServerStats();
+    getUsersStorage();
+  }, []);
+
+  const pieData = serverStats
+    ? [
+        { name: "Active Users", value: serverStats.active_users },
+        { name: "Blocked Users", value: serverStats.blocked_users },
+      ]
+    : [];
 
   return (
     <Box sx={{ p: 3, bgcolor: grey[100], minHeight: "100vh" }}>
@@ -86,61 +156,13 @@ const StatsPage = () => {
         Server Statistics
       </Typography>
       <Grid container spacing={3} mb={3}>
-        {/* Cards for statistics */}
-        <Grid item xs={12} md={3}>
-          <Card elevation={3} sx={{ borderRadius: 2, bgcolor: teal[50] }}>
-            <CardContent>
-              <Typography variant="h6" sx={{ color: teal[700] }}>
-                Total Users
-              </Typography>
-              <Typography variant="h4" sx={{ mt: 1, color: teal[800] }}>
-                {statsData.totalUsers}
-              </Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-        <Grid item xs={12} md={3}>
-          <Card elevation={3} sx={{ borderRadius: 2, bgcolor: teal[50] }}>
-            <CardContent>
-              <Typography variant="h6" sx={{ color: teal[700] }}>
-                Active Users
-              </Typography>
-              <Typography variant="h4" sx={{ mt: 1, color: teal[800] }}>
-                {statsData.activeUsers}
-              </Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-        <Grid item xs={12} md={3}>
-          <Card elevation={3} sx={{ borderRadius: 2, bgcolor: teal[50] }}>
-            <CardContent>
-              <Typography variant="h6" sx={{ color: teal[700] }}>
-                Blocked Users
-              </Typography>
-              <Typography variant="h4" sx={{ mt: 1, color: teal[800] }}>
-                {statsData.blockedUsers}
-              </Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-        <Grid item xs={12} md={3}>
-          <Card elevation={3} sx={{ borderRadius: 2, bgcolor: teal[50] }}>
-            <CardContent>
-              <Typography variant="h6" sx={{ color: teal[700] }}>
-                Total Storage Used
-              </Typography>
-              <Typography variant="h4" sx={{ mt: 1, color: teal[800] }}>
-                {statsData.totalStorageUsed} GB
-              </Typography>
-            </CardContent>
-          </Card>
-        </Grid>
+        {/* ... (Le reste des cartes pour les statistiques du serveur) */}
       </Grid>
 
       <Grid container spacing={3}>
         <Grid item xs={12} md={6}>
           <Card elevation={3} sx={{ borderRadius: 2 }}>
-            <CardContent sx={{ height: cardContentHeight }}>
+            <CardContent sx={{ height: 400 }}>
               <Typography variant="h6" sx={{ color: teal[700] }}>
                 User Statistics
               </Typography>
@@ -156,7 +178,10 @@ const StatsPage = () => {
                     label
                   >
                     {pieData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={colors[index % 2]} />
+                      <Cell
+                        key={`cell-${index}`}
+                        fill={colors[index % colors.length]}
+                      />
                     ))}
                   </Pie>
                   <Legend />
@@ -168,7 +193,7 @@ const StatsPage = () => {
 
         <Grid item xs={12} md={6}>
           <Card elevation={3} sx={{ borderRadius: 2 }}>
-            <CardContent sx={{ height: cardContentHeight }}>
+            <CardContent sx={{ height: 400 }}>
               <Typography variant="h6" sx={{ color: teal[700] }}>
                 File Extensions Distribution
               </Typography>
@@ -187,7 +212,7 @@ const StatsPage = () => {
 
         <Grid item xs={12}>
           <Card elevation={3} sx={{ borderRadius: 2 }}>
-            <CardContent sx={{ height: cardContentHeight }}>
+            <CardContent sx={{ height: 400 }}>
               <Typography variant="h6" sx={{ color: teal[700] }}>
                 User Storage Usage
               </Typography>
@@ -195,9 +220,9 @@ const StatsPage = () => {
                 <BarChart data={barChartData}>
                   <XAxis dataKey="name" />
                   <YAxis />
-                  <Tooltip />
+                  <Tooltip content={<CustomTooltip />} />
                   <Legend />
-                  <Bar dataKey="storageUsed" fill={teal[500]} />
+                  <Bar dataKey="storage_used" fill={teal[500]} />
                 </BarChart>
               </ResponsiveContainer>
               {userStorageData.length > 20 && (
@@ -233,7 +258,9 @@ const StatsPage = () => {
                     <TableCell component="th" scope="row">
                       {user.name}
                     </TableCell>
-                    <TableCell align="right">{user.storageUsed}</TableCell>
+                    <TableCell align="right">
+                      {formatStorage(user.storage_used)}
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
