@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Box,
   Typography,
@@ -13,29 +13,156 @@ import AddCircleIcon from "@mui/icons-material/AddCircle";
 import DeleteIcon from "@mui/icons-material/Delete";
 import EditIcon from "@mui/icons-material/Edit";
 import SaveIcon from "@mui/icons-material/Save";
+import { axiosInstance } from "../AxiosInstance";
+
+async function getSettings(
+  setPasswordRotation,
+  setMaxLoginAttempts,
+  setFileExtensions,
+  setAllowedDomains,
+  setAcceptAllExtensions,
+  setAcceptAllDomains
+) {
+  try {
+    let accessToken = sessionStorage.getItem("token");
+    const response = await axiosInstance.get("/settings/", {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+    if (response.status === 200) {
+      const data = response.data;
+      setPasswordRotation(data.pwd_rotation);
+      setMaxLoginAttempts(data.login_attempt);
+      setFileExtensions(data.extensions.map((ext) => ext.extension));
+      setAllowedDomains(data.domains.map((domain) => domain.domain));
+      setAcceptAllExtensions(data.extensions.length === 0);
+      setAcceptAllDomains(data.domains.length === 0);
+      alert("Settings retrieved successfully");
+    } else {
+      alert("Error: " + response.statusText);
+    }
+  } catch (e) {
+    console.error(e);
+    alert("Error: " + e.message);
+  }
+}
+
+async function editPWDRotation(time) {
+  try {
+    let accessToken = sessionStorage.getItem("token");
+    const response = await axiosInstance.put(
+      `settings/pwd_rotation`,
+      { value: time },
+      {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      }
+    );
+    if (response.status === 200) {
+      alert("Updated successfully");
+    } else {
+      alert("Error");
+    }
+  } catch (e) {
+    alert(e);
+  }
+}
+
+async function editLoginAttempts(time) {
+  try {
+    let accessToken = sessionStorage.getItem("token");
+    const response = await axiosInstance.put(
+      `settings/login_attempts`,
+      { value: time },
+      {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      }
+    );
+    if (response.status === 200) {
+      alert("Updated successfully");
+    } else {
+      alert("Error");
+    }
+  } catch (e) {
+    alert(e);
+  }
+}
+
+async function addNewExtension(extension) {
+  try {
+    let accessToken = sessionStorage.getItem("token");
+    const response = await axiosInstance.post(
+      `settings/extension`,
+      { ext: extension },
+      {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      }
+    );
+    if (response.status === 200) {
+      alert("Updated successfully");
+    } else {
+      alert("Error");
+    }
+  } catch (e) {
+    alert(e);
+  }
+}
+
+async function addNewDomain(domain) {
+  try {
+    let accessToken = sessionStorage.getItem("token");
+    const response = await axiosInstance.post(
+      `settings/domain`,
+      { domain: domain },
+      {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      }
+    );
+    if (response.status === 200) {
+      alert("Updated successfully");
+    } else {
+      alert("Error");
+    }
+  } catch (e) {
+    alert(e);
+  }
+}
 
 const SettingsPage = () => {
-  const [fileExtensions, setFileExtensions] = useState([
-    ".pdf",
-    ".docx",
-    ".xlsx",
-  ]);
+  const [fileExtensions, setFileExtensions] = useState([]);
   const [newExtension, setNewExtension] = useState("");
   const [isEditingRotation, setIsEditingRotation] = useState(false);
   const [isEditingLoginAttempts, setIsEditingLoginAttempts] = useState(false);
-  const [passwordRotation, setPasswordRotation] = useState("3 mois");
+  const [passwordRotation, setPasswordRotation] = useState("3 months");
   const [maxLoginAttempts, setMaxLoginAttempts] = useState("5");
   const [acceptAllExtensions, setAcceptAllExtensions] = useState(false);
 
-  const [allowedDomains, setAllowedDomains] = useState([
-    "@gmail.com",
-    "@esi.dz",
-  ]);
+  const [allowedDomains, setAllowedDomains] = useState([]);
   const [newDomain, setNewDomain] = useState("");
   const [acceptAllDomains, setAcceptAllDomains] = useState(false);
 
+  useEffect(() => {
+    getSettings(
+      setPasswordRotation,
+      setMaxLoginAttempts,
+      setFileExtensions,
+      setAllowedDomains,
+      setAcceptAllExtensions,
+      setAcceptAllDomains
+    );
+  }, []);
+
   const handleAddExtension = () => {
     if (newExtension && !fileExtensions.includes(newExtension)) {
+      addNewExtension(newExtension);
       setFileExtensions([...fileExtensions, newExtension]);
       setNewExtension("");
     }
@@ -49,6 +176,7 @@ const SettingsPage = () => {
 
   const handleAddDomain = () => {
     if (newDomain && !allowedDomains.includes(newDomain)) {
+      addNewDomain(newDomain);
       setAllowedDomains([...allowedDomains, newDomain]);
       setNewDomain("");
     }
@@ -65,6 +193,8 @@ const SettingsPage = () => {
   };
 
   const handleSaveRotationClick = () => {
+    const selectedRotationValue = passwordRotation.split(" ")[0];
+    editPWDRotation(selectedRotationValue);
     setIsEditingRotation(false);
   };
 
@@ -73,11 +203,13 @@ const SettingsPage = () => {
   };
 
   const handleSaveLoginAttemptsClick = () => {
+    const valueToSend = maxLoginAttempts === "none" ? null : maxLoginAttempts;
+    editLoginAttempts(valueToSend);
     setIsEditingLoginAttempts(false);
   };
 
   return (
-    <Box sx={{ p: 4 }}>
+    <Box sx={{ p: 4, width: "100%" }}>
       <Typography variant="h4" gutterBottom>
         Settings
       </Typography>
@@ -88,7 +220,7 @@ const SettingsPage = () => {
           <Paper elevation={3} sx={{ p: 3 }}>
             <Grid container alignItems="center" justifyContent="space-between">
               <Typography variant="h6" gutterBottom>
-                Rotation des Passwords
+                Passwords Rotation
               </Typography>
               <IconButton
                 onClick={
@@ -103,7 +235,7 @@ const SettingsPage = () => {
             <TextField
               fullWidth
               select
-              label="Temps de rotation"
+              label="Rotation time"
               value={passwordRotation}
               onChange={(e) => setPasswordRotation(e.target.value)}
               SelectProps={{ native: true }}
@@ -111,9 +243,9 @@ const SettingsPage = () => {
               margin="normal"
               disabled={!isEditingRotation}
             >
-              <option value="3 mois">3 mois</option>
-              <option value="6 mois">6 mois</option>
-              <option value="9 mois">9 mois</option>
+              <option value="3 months">3 months</option>
+              <option value="6 months">6 months</option>
+              <option value="9 months">9 months</option>
             </TextField>
           </Paper>
         </Grid>
@@ -123,7 +255,7 @@ const SettingsPage = () => {
           <Paper elevation={3} sx={{ p: 3 }}>
             <Grid container alignItems="center" justifyContent="space-between">
               <Typography variant="h6" gutterBottom>
-                Tentatives de Connexion Maximales
+                Login Attempts
               </Typography>
               <IconButton
                 onClick={
@@ -138,7 +270,7 @@ const SettingsPage = () => {
             <TextField
               fullWidth
               select
-              label="Nombre maximal de tentatives"
+              label="Maximum number of attempts"
               value={maxLoginAttempts}
               onChange={(e) => setMaxLoginAttempts(e.target.value)}
               SelectProps={{ native: true }}
@@ -157,7 +289,7 @@ const SettingsPage = () => {
         <Grid item xs={12} md={6}>
           <Paper elevation={3} sx={{ p: 3 }}>
             <Typography variant="h6" gutterBottom>
-              Types de Fichiers Cryptés
+              Encrypted File Types
             </Typography>
             <FormControlLabel
               control={
@@ -166,7 +298,7 @@ const SettingsPage = () => {
                   onChange={(e) => setAcceptAllExtensions(e.target.checked)}
                 />
               }
-              label="Accepter toutes les extensions"
+              label="Accept all extensions"
             />
             {!acceptAllExtensions && (
               <Grid container spacing={1} alignItems="center">
@@ -194,7 +326,7 @@ const SettingsPage = () => {
                 <Grid item xs={8}>
                   <TextField
                     fullWidth
-                    label="Ajouter une extension"
+                    label="Add an extension"
                     value={newExtension}
                     onChange={(e) => setNewExtension(e.target.value)}
                     variant="outlined"
@@ -215,7 +347,7 @@ const SettingsPage = () => {
         <Grid item xs={12} md={6}>
           <Paper elevation={3} sx={{ p: 3 }}>
             <Typography variant="h6" gutterBottom>
-              Domaines Autorisés
+              Allowed Domains
             </Typography>
             <FormControlLabel
               control={
@@ -224,7 +356,7 @@ const SettingsPage = () => {
                   onChange={(e) => setAcceptAllDomains(e.target.checked)}
                 />
               }
-              label="Accepter tous les domaines"
+              label="Accept all domains"
             />
             {!acceptAllDomains && (
               <Grid container spacing={1} alignItems="center">
@@ -252,7 +384,7 @@ const SettingsPage = () => {
                 <Grid item xs={8}>
                   <TextField
                     fullWidth
-                    label="Ajouter un domaine"
+                    label="Add a domain"
                     value={newDomain}
                     onChange={(e) => setNewDomain(e.target.value)}
                     variant="outlined"
