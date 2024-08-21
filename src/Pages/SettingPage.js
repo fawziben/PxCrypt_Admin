@@ -15,6 +15,19 @@ import EditIcon from "@mui/icons-material/Edit";
 import SaveIcon from "@mui/icons-material/Save";
 import { axiosInstance } from "../AxiosInstance";
 
+// Mappage pour la rotation des mots de passe
+const passwordRotationMapping = {
+  "3 months": "3",
+  "6 months": "6",
+  "9 months": "9",
+};
+
+const reversePasswordRotationMapping = {
+  3: "3 months",
+  6: "6 months",
+  9: "9 months",
+};
+
 async function getSettings(
   setPasswordRotation,
   setMaxLoginAttempts,
@@ -32,7 +45,8 @@ async function getSettings(
     });
     if (response.status === 200) {
       const data = response.data;
-      setPasswordRotation(data.pwd_rotation);
+      alert(data.pwd_rotation);
+      setPasswordRotation(reversePasswordRotationMapping[data.pwd_rotation]);
       setMaxLoginAttempts(data.login_attempt);
       setFileExtensions(data.extensions.map((ext) => ext.extension));
       setAllowedDomains(data.domains.map((domain) => domain.domain));
@@ -105,7 +119,7 @@ async function addNewExtension(extension) {
       }
     );
     if (response.status === 200) {
-      alert("Updated successfully");
+      alert("Extension added successfully");
     } else {
       alert("Error");
     }
@@ -127,7 +141,7 @@ async function addNewDomain(domain) {
       }
     );
     if (response.status === 200) {
-      alert("Updated successfully");
+      alert("Domain added successfully");
     } else {
       alert("Error");
     }
@@ -144,10 +158,12 @@ const SettingsPage = () => {
   const [passwordRotation, setPasswordRotation] = useState("3 months");
   const [maxLoginAttempts, setMaxLoginAttempts] = useState("5");
   const [acceptAllExtensions, setAcceptAllExtensions] = useState(false);
+  const [acceptAllExtensionsState, setAcceptAllExtensionsState] = useState([]);
 
   const [allowedDomains, setAllowedDomains] = useState([]);
   const [newDomain, setNewDomain] = useState("");
   const [acceptAllDomains, setAcceptAllDomains] = useState(false);
+  const [acceptAllDomainsState, setAcceptAllDomainsState] = useState([]);
 
   useEffect(() => {
     getSettings(
@@ -160,9 +176,27 @@ const SettingsPage = () => {
     );
   }, []);
 
-  const handleAddExtension = () => {
+  useEffect(() => {
+    if (acceptAllExtensions) {
+      setAcceptAllExtensionsState(fileExtensions);
+      setFileExtensions([]);
+    } else {
+      setFileExtensions(acceptAllExtensionsState);
+    }
+  }, [acceptAllExtensions]);
+
+  useEffect(() => {
+    if (acceptAllDomains) {
+      setAcceptAllDomainsState(allowedDomains);
+      setAllowedDomains([]);
+    } else {
+      setAllowedDomains(acceptAllDomainsState);
+    }
+  }, [acceptAllDomains]);
+
+  const handleAddExtension = async () => {
     if (newExtension && !fileExtensions.includes(newExtension)) {
-      addNewExtension(newExtension);
+      await addNewExtension(newExtension);
       setFileExtensions([...fileExtensions, newExtension]);
       setNewExtension("");
     }
@@ -174,9 +208,9 @@ const SettingsPage = () => {
     setFileExtensions(updatedExtensions);
   };
 
-  const handleAddDomain = () => {
+  const handleAddDomain = async () => {
     if (newDomain && !allowedDomains.includes(newDomain)) {
-      addNewDomain(newDomain);
+      await addNewDomain(newDomain);
       setAllowedDomains([...allowedDomains, newDomain]);
       setNewDomain("");
     }
@@ -193,7 +227,7 @@ const SettingsPage = () => {
   };
 
   const handleSaveRotationClick = () => {
-    const selectedRotationValue = passwordRotation.split(" ")[0];
+    const selectedRotationValue = passwordRotationMapping[passwordRotation];
     editPWDRotation(selectedRotationValue);
     setIsEditingRotation(false);
   };
@@ -285,60 +319,61 @@ const SettingsPage = () => {
           </Paper>
         </Grid>
 
-        {/* Types de Fichiers Cryptés */}
+        {/* Extensions de Fichiers */}
         <Grid item xs={12} md={6}>
           <Paper elevation={3} sx={{ p: 3 }}>
             <Typography variant="h6" gutterBottom>
-              Encrypted File Types
+              File Extensions
             </Typography>
             <FormControlLabel
               control={
                 <Checkbox
                   checked={acceptAllExtensions}
-                  onChange={(e) => setAcceptAllExtensions(e.target.checked)}
+                  onChange={() => {
+                    setAcceptAllExtensions(!acceptAllExtensions);
+                  }}
                 />
               }
-              label="Accept all extensions"
+              label="Accept all file extensions"
             />
             {!acceptAllExtensions && (
-              <Grid container spacing={1} alignItems="center">
-                {fileExtensions.map((ext, index) => (
-                  <React.Fragment key={index}>
-                    <Grid item xs={8}>
-                      <TextField
-                        fullWidth
-                        value={ext}
-                        disabled
-                        variant="outlined"
-                        margin="normal"
-                      />
-                    </Grid>
-                    <Grid item xs={4}>
-                      <IconButton
-                        color="error"
-                        onClick={() => handleDeleteExtension(index)}
+              <>
+                <Grid container spacing={2}>
+                  {fileExtensions.map((ext, index) => (
+                    <Grid item xs={12} sm={6} md={4} key={index}>
+                      <Paper
+                        elevation={2}
+                        sx={{
+                          p: 2,
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "space-between",
+                        }}
                       >
-                        <DeleteIcon />
-                      </IconButton>
+                        <Typography>{ext}</Typography>
+                        <IconButton
+                          onClick={() => handleDeleteExtension(index)}
+                        >
+                          <DeleteIcon />
+                        </IconButton>
+                      </Paper>
                     </Grid>
-                  </React.Fragment>
-                ))}
-                <Grid item xs={8}>
+                  ))}
+                </Grid>
+                <Box sx={{ display: "flex", alignItems: "center", mt: 2 }}>
                   <TextField
-                    fullWidth
-                    label="Add an extension"
+                    label="New Extension"
                     value={newExtension}
                     onChange={(e) => setNewExtension(e.target.value)}
                     variant="outlined"
                     margin="normal"
+                    sx={{ flexGrow: 1 }}
                   />
-                </Grid>
-                <Grid item xs={4}>
                   <IconButton color="primary" onClick={handleAddExtension}>
                     <AddCircleIcon />
                   </IconButton>
-                </Grid>
-              </Grid>
+                </Box>
+              </>
             )}
           </Paper>
         </Grid>
@@ -353,50 +388,49 @@ const SettingsPage = () => {
               control={
                 <Checkbox
                   checked={acceptAllDomains}
-                  onChange={(e) => setAcceptAllDomains(e.target.checked)}
+                  onChange={() => {
+                    setAcceptAllDomains(!acceptAllDomains);
+                  }}
                 />
               }
               label="Accept all domains"
             />
             {!acceptAllDomains && (
-              <Grid container spacing={1} alignItems="center">
-                {allowedDomains.map((domain, index) => (
-                  <React.Fragment key={index}>
-                    <Grid item xs={8}>
-                      <TextField
-                        fullWidth
-                        value={domain}
-                        disabled
-                        variant="outlined"
-                        margin="normal"
-                      />
-                    </Grid>
-                    <Grid item xs={4}>
-                      <IconButton
-                        color="error"
-                        onClick={() => handleDeleteDomain(index)}
+              <>
+                <Grid container spacing={2}>
+                  {allowedDomains.map((domain, index) => (
+                    <Grid item xs={12} sm={6} md={4} key={index}>
+                      <Paper
+                        elevation={2}
+                        sx={{
+                          p: 2,
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "space-between",
+                        }}
                       >
-                        <DeleteIcon />
-                      </IconButton>
+                        <Typography>{domain}</Typography>
+                        <IconButton onClick={() => handleDeleteDomain(index)}>
+                          <DeleteIcon />
+                        </IconButton>
+                      </Paper>
                     </Grid>
-                  </React.Fragment>
-                ))}
-                <Grid item xs={8}>
+                  ))}
+                </Grid>
+                <Box sx={{ display: "flex", alignItems: "center", mt: 2 }}>
                   <TextField
-                    fullWidth
-                    label="Add a domain"
+                    label="New Domain"
                     value={newDomain}
                     onChange={(e) => setNewDomain(e.target.value)}
                     variant="outlined"
                     margin="normal"
+                    sx={{ flexGrow: 1 }}
                   />
-                </Grid>
-                <Grid item xs={4}>
                   <IconButton color="primary" onClick={handleAddDomain}>
                     <AddCircleIcon />
                   </IconButton>
-                </Grid>
-              </Grid>
+                </Box>
+              </>
             )}
           </Paper>
         </Grid>
