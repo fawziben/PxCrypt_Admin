@@ -170,14 +170,66 @@ const StatsPage = () => {
         { name: "Blocked Users", value: serverStats.blocked_users },
       ]
     : [];
-
   return (
     <Box sx={{ p: 3, bgcolor: grey[100], minHeight: "100vh" }}>
       <Typography variant="h4" sx={{ mb: 3, color: teal[800] }}>
         Server Statistics
       </Typography>
+
       <Grid container spacing={3} mb={3}>
-        {/* ... (Le reste des cartes pour les statistiques du serveur) */}
+        {/* Conditionally render the cards only if serverStats is not null */}
+        {serverStats && (
+          <>
+            <Grid item xs={12} md={3}>
+              <Card elevation={3} sx={{ borderRadius: 2, bgcolor: teal[50] }}>
+                <CardContent>
+                  <Typography variant="h6" sx={{ color: teal[700] }}>
+                    Total Users
+                  </Typography>
+                  <Typography variant="h4" sx={{ mt: 1, color: teal[800] }}>
+                    {serverStats.total_users}
+                  </Typography>
+                </CardContent>
+              </Card>
+            </Grid>
+            <Grid item xs={12} md={3}>
+              <Card elevation={3} sx={{ borderRadius: 2, bgcolor: teal[50] }}>
+                <CardContent>
+                  <Typography variant="h6" sx={{ color: teal[700] }}>
+                    Active Users
+                  </Typography>
+                  <Typography variant="h4" sx={{ mt: 1, color: teal[800] }}>
+                    {serverStats.active_users}
+                  </Typography>
+                </CardContent>
+              </Card>
+            </Grid>
+            <Grid item xs={12} md={3}>
+              <Card elevation={3} sx={{ borderRadius: 2, bgcolor: teal[50] }}>
+                <CardContent>
+                  <Typography variant="h6" sx={{ color: teal[700] }}>
+                    Blocked Users
+                  </Typography>
+                  <Typography variant="h4" sx={{ mt: 1, color: teal[800] }}>
+                    {serverStats.blocked_users}
+                  </Typography>
+                </CardContent>
+              </Card>
+            </Grid>
+            <Grid item xs={12} md={3}>
+              <Card elevation={3} sx={{ borderRadius: 2, bgcolor: teal[50] }}>
+                <CardContent>
+                  <Typography variant="h6" sx={{ color: teal[700] }}>
+                    Total Storage Used
+                  </Typography>
+                  <Typography variant="h4" sx={{ mt: 1, color: teal[800] }}>
+                    {convertSize(serverStats.total_storage_used)}
+                  </Typography>
+                </CardContent>
+              </Card>
+            </Grid>
+          </>
+        )}
       </Grid>
 
       <Grid container spacing={3}>

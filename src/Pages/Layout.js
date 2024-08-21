@@ -71,7 +71,12 @@ export default function Layout({ children }) {
 
   const items = [
     {
-      text: "Dashboard",
+      text: "Groups",
+      icon: <GroupsIcon sx={{ color: "#000000", ...classes.drawerIcons }} />,
+      path: "/dashboard/groups",
+    },
+    {
+      text: "Users",
       icon: (
         <GridViewOutlinedIcon
           sx={{ color: "#000000", ...classes.drawerIcons }}
@@ -79,11 +84,7 @@ export default function Layout({ children }) {
       ),
       path: "/dashboard",
     },
-    {
-      text: "Shared Files",
-      icon: <ShareIcon sx={{ color: "#000000", ...classes.drawerIcons }} />,
-      path: "/dashboard/sharedfiles",
-    },
+
     {
       text: "Analytics",
       icon: (
@@ -94,11 +95,6 @@ export default function Layout({ children }) {
       path: "/dashboard/analytics",
     },
     {
-      text: "Groups",
-      icon: <GroupsIcon sx={{ color: "#000000", ...classes.drawerIcons }} />,
-      path: "/dashboard/groups",
-    },
-    {
       text: "Notifications",
       icon: (
         <NotificationsNoneOutlinedIcon
@@ -106,6 +102,11 @@ export default function Layout({ children }) {
         />
       ),
       path: "/dashboard/settings",
+    },
+    {
+      text: "Shared Files",
+      icon: <ShareIcon sx={{ color: "#000000", ...classes.drawerIcons }} />,
+      path: "/dashboard/sharedfiles",
     },
     // {
     //   text: "Log Out",
