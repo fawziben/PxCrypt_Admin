@@ -50,8 +50,8 @@ async function getSettings(
       setMaxLoginAttempts(data.login_attempt);
       setFileExtensions(data.extensions.map((ext) => ext.extension));
       setAllowedDomains(data.domains.map((domain) => domain.domain));
-      setAcceptAllExtensions(data.extensions.length === 0);
-      setAcceptAllDomains(data.domains.length === 0);
+      setAcceptAllExtensions(data.all_extensions);
+      setAcceptAllDomains(data.all_domains);
       alert("Settings retrieved successfully");
     } else {
       alert("Error: " + response.statusText);
@@ -149,6 +149,88 @@ async function addNewDomain(domain) {
     alert(e);
   }
 }
+async function deleteExtension(ext) {
+  try {
+    let accessToken = sessionStorage.getItem("token");
+    const response = await axiosInstance.delete(`settings/extension`, {
+      data: { ext: ext },
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+    if (response.status === 200) {
+      alert("Extension deleted successfully");
+    } else {
+      alert("Error");
+    }
+  } catch (e) {
+    alert(e.message);
+  }
+}
+
+async function deleteDomain(domain) {
+  try {
+    let accessToken = sessionStorage.getItem("token");
+    const response = await axiosInstance.delete(`settings/domain`, {
+      data: { domain: domain },
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+    if (response.status === 200) {
+      alert("Domain deleted successfully");
+    } else {
+      alert("Error");
+    }
+  } catch (e) {
+    alert(e.message);
+  }
+}
+
+async function updateAllDomains() {
+  try {
+    let accessToken = sessionStorage.getItem("token");
+    const response = await axiosInstance.put(
+      `settings/all_domains`,
+      {},
+      {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      }
+    );
+    if (response.status === 200) {
+      alert("All Domains state updated successfully ");
+    } else {
+      alert("Error");
+    }
+  } catch (e) {
+    alert(e.message);
+  }
+}
+
+async function updateAllExtensions() {
+  try {
+    let accessToken = sessionStorage.getItem("token");
+    alert(accessToken);
+    const response = await axiosInstance.put(
+      `settings/all_extensions`,
+      {},
+      {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      }
+    );
+    if (response.status === 200) {
+      alert("All Extensions state updated successfully ");
+    } else {
+      alert("Error");
+    }
+  } catch (e) {
+    alert(e.message);
+  }
+}
 
 const SettingsPage = () => {
   const [fileExtensions, setFileExtensions] = useState([]);
@@ -202,10 +284,16 @@ const SettingsPage = () => {
     }
   };
 
-  const handleDeleteExtension = (index) => {
+  const handleDeleteExtension = (index, extension) => {
+    deleteExtension(extension);
     const updatedExtensions = [...fileExtensions];
     updatedExtensions.splice(index, 1);
     setFileExtensions(updatedExtensions);
+  };
+
+  const handleAllExtensions = () => {
+    updateAllExtensions();
+    setAcceptAllExtensions(!acceptAllExtensions);
   };
 
   const handleAddDomain = async () => {
@@ -216,10 +304,16 @@ const SettingsPage = () => {
     }
   };
 
-  const handleDeleteDomain = (index) => {
+  const handleDeleteDomain = (index, domain) => {
+    deleteDomain(domain);
     const updatedDomains = [...allowedDomains];
     updatedDomains.splice(index, 1);
     setAllowedDomains(updatedDomains);
+  };
+
+  const handleAllDomains = () => {
+    updateAllDomains();
+    setAcceptAllDomains(!acceptAllDomains);
   };
 
   const handleEditRotationClick = () => {
@@ -329,9 +423,7 @@ const SettingsPage = () => {
               control={
                 <Checkbox
                   checked={acceptAllExtensions}
-                  onChange={() => {
-                    setAcceptAllExtensions(!acceptAllExtensions);
-                  }}
+                  onChange={handleAllExtensions}
                 />
               }
               label="Accept all file extensions"
@@ -352,7 +444,7 @@ const SettingsPage = () => {
                       >
                         <Typography>{ext}</Typography>
                         <IconButton
-                          onClick={() => handleDeleteExtension(index)}
+                          onClick={() => handleDeleteExtension(index, ext)}
                         >
                           <DeleteIcon />
                         </IconButton>
@@ -388,9 +480,7 @@ const SettingsPage = () => {
               control={
                 <Checkbox
                   checked={acceptAllDomains}
-                  onChange={() => {
-                    setAcceptAllDomains(!acceptAllDomains);
-                  }}
+                  onChange={handleAllDomains}
                 />
               }
               label="Accept all domains"
@@ -410,7 +500,9 @@ const SettingsPage = () => {
                         }}
                       >
                         <Typography>{domain}</Typography>
-                        <IconButton onClick={() => handleDeleteDomain(index)}>
+                        <IconButton
+                          onClick={() => handleDeleteDomain(index, domain)}
+                        >
                           <DeleteIcon />
                         </IconButton>
                       </Paper>

@@ -27,11 +27,13 @@ import NotificationsNoneOutlinedIcon from "@mui/icons-material/NotificationsNone
 import SearchIcon from "@mui/icons-material/Search";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import GroupsIcon from "@mui/icons-material/Groups";
+import ManageAccountsRoundedIcon from "@mui/icons-material/ManageAccountsRounded";
 // import Compte from "../Components/Compte";
 // import Notifications from "../Components/Notification";
-import { Logout } from "@mui/icons-material";
+import { Analytics, Group, Logout, Settings } from "@mui/icons-material";
 import Notifications from "../Components/Notification";
 import Compte from "../Components/Compte";
+import { FaUsers } from "react-icons/fa";
 
 export default function Layout({ children }) {
   const minWidth = 100;
@@ -66,25 +68,11 @@ export default function Layout({ children }) {
 
     text: {
       width: !showNewIcon ? "0%" : "50%",
+      // fontWeight: "bold",
     },
   };
 
   const items = [
-    {
-      text: "Groups",
-      icon: <GroupsIcon sx={{ color: "#000000", ...classes.drawerIcons }} />,
-      path: "/dashboard/groups",
-    },
-    {
-      text: "Users",
-      icon: (
-        <GridViewOutlinedIcon
-          sx={{ color: "#000000", ...classes.drawerIcons }}
-        />
-      ),
-      path: "/dashboard",
-    },
-
     {
       text: "Analytics",
       icon: (
@@ -92,22 +80,33 @@ export default function Layout({ children }) {
           sx={{ color: "#000000", ...classes.drawerIcons }}
         />
       ),
-      path: "/dashboard/analytics",
+      path: "/dashboard/groups",
     },
     {
-      text: "Notifications",
+      text: "Users",
       icon: (
-        <NotificationsNoneOutlinedIcon
+        <ManageAccountsRoundedIcon
           sx={{ color: "#000000", ...classes.drawerIcons }}
         />
       ),
-      path: "/dashboard/settings",
+      path: "/dashboard",
+    },
+
+    {
+      text: "Groups",
+      icon: <Group sx={{ color: "#000000", ...classes.drawerIcons }} />,
+      path: "/dashboard/analytics",
     },
     {
-      text: "Shared Files",
-      icon: <ShareIcon sx={{ color: "#000000", ...classes.drawerIcons }} />,
-      path: "/dashboard/sharedfiles",
+      text: "Settings",
+      icon: <Settings sx={{ color: "#000000", ...classes.drawerIcons }} />,
+      path: "/dashboard/settings",
     },
+    // {
+    //   text: "Shared Files",
+    //   icon: <ShareIcon sx={{ color: "#000000", ...classes.drawerIcons }} />,
+    //   path: "/dashboard/sharedfiles",
+    // },
     // {
     //   text: "Log Out",
     //   icon: <Logout sx={{ color: "#000000", ...classes.drawerIcons }} />,
@@ -194,13 +193,13 @@ export default function Layout({ children }) {
           {showNewIcon ? (
             <Box sx={{ display: "flex", flexGrow: 1 }}>
               <Typography
-                variant="h5"
+                variant="h4"
                 sx={{ color: "#666666", ...classes.logo }}
               >
                 Px
               </Typography>
               <Typography
-                variant="h5"
+                variant="h4"
                 sx={{ color: "#26525D", ...classes.logo }}
               >
                 Crypt.
@@ -236,7 +235,7 @@ export default function Layout({ children }) {
                   {item.icon}
                 </ListItemIcon>
               </Box>
-              <Typography noWrap sx={classes.text}>
+              <Typography noWrap sx={classes.text} variant="h6">
                 {showNewIcon ? item.text : null}
               </Typography>
             </ListItem>
@@ -259,7 +258,7 @@ export default function Layout({ children }) {
                 <Logout sx={{ color: "#000000", ...classes.drawerIcons }} />
               </ListItemIcon>
             </Box>
-            <Typography noWrap sx={classes.text}>
+            <Typography noWrap sx={classes.text} variant="h6">
               {showNewIcon ? "Log Out" : null}
             </Typography>
           </ListItem>
