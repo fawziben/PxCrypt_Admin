@@ -187,7 +187,7 @@ const GroupsList = ({
                     <b>Description :</b> {group.description}
                   </div>
                   <div className="flex justify-start">
-                    <AvatarGroup max={10}>
+                    <AvatarGroup max={8}>
                       {group.users.map((user, index) => (
                         <Avatar
                           key={index}

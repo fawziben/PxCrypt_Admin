@@ -118,9 +118,14 @@ const StatsPage = () => {
         },
       });
 
-      if (response.status === 200) {
-        alert(response.data[1].extension);
-        setFileExtensionsData(response.data);
+      if (response.status === 200 && response.data) {
+        // Vérifiez si response.data est un tableau et contient au moins un élément
+        if (Array.isArray(response.data) && response.data.length > 0) {
+          setFileExtensionsData(response.data);
+        } else {
+          // Si data est vide ou ne contient pas d'éléments valides
+          setFileExtensionsData([]);
+        }
       }
     } catch (e) {
       alert(e);
@@ -271,13 +276,19 @@ const StatsPage = () => {
                 File Extensions Distribution
               </Typography>
               <ResponsiveContainer width="100%" height="80%">
-                <BarChart data={fileExtensionsData}>
-                  <XAxis dataKey="extension" />
-                  <YAxis />
-                  <Tooltip />
-                  <Legend />
-                  <Bar dataKey="count" fill={teal[500]} />
-                </BarChart>
+                {fileExtensionsData.length > 0 ? (
+                  <BarChart data={fileExtensionsData}>
+                    <XAxis dataKey="extension" />
+                    <YAxis />
+                    <Tooltip />
+                    <Legend />
+                    <Bar dataKey="count" fill={teal[500]} />
+                  </BarChart>
+                ) : (
+                  <Typography sx={{ mt: 2, color: grey[600] }}>
+                    No data available for file extensions.
+                  </Typography>
+                )}
               </ResponsiveContainer>
             </CardContent>
           </Card>

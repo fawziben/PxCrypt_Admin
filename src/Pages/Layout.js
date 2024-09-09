@@ -126,8 +126,7 @@ export default function Layout({ children }) {
   };
 
   const logOut = () => {
-    localStorage.setItem("token", "");
-    window.electronAPI.logout(); // Appel d'une fonction depuis l'API Electron
+    sessionStorage.setItem("token", "");
     navigate("/");
   };
 
