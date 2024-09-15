@@ -43,7 +43,6 @@ function OTPFile({ email }) {
 
   const handleSubmit = () => {
     verifyCode(email, otp.join(""));
-    alert("Entered OTP is: " + otp.join(""));
   };
 
   return (

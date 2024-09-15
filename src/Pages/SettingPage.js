@@ -45,14 +45,12 @@ async function getSettings(
     });
     if (response.status === 200) {
       const data = response.data;
-      alert(data.pwd_rotation);
       setPasswordRotation(reversePasswordRotationMapping[data.pwd_rotation]);
       setMaxLoginAttempts(data.login_attempt);
       setFileExtensions(data.extensions.map((ext) => ext.extension));
       setAllowedDomains(data.domains.map((domain) => domain.domain));
       setAcceptAllExtensions(data.all_extensions);
       setAcceptAllDomains(data.all_domains);
-      alert("Settings retrieved successfully");
     } else {
       alert("Error: " + response.statusText);
     }

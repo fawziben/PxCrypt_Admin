@@ -10,6 +10,7 @@ import { CheckCircle, ExpandMore } from "@mui/icons-material";
 import UserDetails from "./UserDetails"; // Importez le composant UserDetails
 import { useTransition, animated } from "react-spring"; // Importez useTransition et animated depuis react-spring
 import { teal } from "@mui/material/colors";
+import CustomSnackbar from "./CustomSnackbar";
 
 const SmallAvatar = styled(Avatar)(({ theme }) => ({
   width: theme.spacing(4),
@@ -18,7 +19,12 @@ const SmallAvatar = styled(Avatar)(({ theme }) => ({
   margin: "auto",
 }));
 
-const changeUserState = async (id) => {
+const changeUserState = async (
+  id,
+  setSnackbarMessage,
+  setSnackbarSeverity,
+  setSnackbarOpen
+) => {
   try {
     let accessToken = sessionStorage.getItem("token");
     const response = await axiosInstance.put(
@@ -34,8 +40,14 @@ const changeUserState = async (id) => {
     console.log(response);
 
     if (response.status === 200) {
+      setSnackbarMessage("User State Updated Successfully");
+      setSnackbarSeverity("success");
+      setSnackbarOpen(true);
       console.log("user blocked successfully");
     } else {
+      setSnackbarMessage("Failed updating user state");
+      setSnackbarSeverity("error");
+      setSnackbarOpen(true);
       console.log("Error while blocking this user");
     }
   } catch (error) {
@@ -43,7 +55,13 @@ const changeUserState = async (id) => {
   }
 };
 
-const deleteUser = async (id, setUsers) => {
+const deleteUser = async (
+  id,
+  setUsers,
+  setSnackbarMessage,
+  setSnackbarSeverity,
+  setSnackbarOpen
+) => {
   try {
     let accessToken = sessionStorage.getItem("token");
     const response = await axiosInstance.delete(`users/${id}`, {
@@ -55,9 +73,15 @@ const deleteUser = async (id, setUsers) => {
     console.log(response);
 
     if (response.status === 204) {
+      setSnackbarMessage("User Deleted Successfully");
+      setSnackbarSeverity("success");
+      setSnackbarOpen(true);
       console.log("user Deleted successfully");
       setUsers((prevUsers) => prevUsers.filter((user) => user.id !== id));
     } else {
+      setSnackbarMessage("Failed to delete user");
+      setSnackbarSeverity("error");
+      setSnackbarOpen(true);
       console.log("Error while deleting this user");
     }
   } catch (error) {
@@ -69,7 +93,13 @@ export default function UsersTable() {
   const [containerHeight, setContainerHeight] = useState(0);
   const [users, setUsers] = useState([]);
   const [selectedUser, setSelectedUser] = useState(null); // État pour suivre l'utilisateur sélectionné
+  const [snackbarOpen, setSnackbarOpen] = React.useState(false);
+  const [snackbarMessage, setSnackbarMessage] = React.useState("");
+  const [snackbarSeverity, setSnackbarSeverity] = React.useState("success");
 
+  const handleCloseSnackbar = () => {
+    setSnackbarOpen(false);
+  };
   const formatDate = (date) => {
     const formattedDate = new Date(date).toLocaleDateString("en-US", {
       month: "long",
@@ -106,7 +136,7 @@ export default function UsersTable() {
         setUsers(usersData);
       }
     } catch (e) {
-      alert(e);
+      console.log(e);
     }
   }
 
@@ -132,7 +162,13 @@ export default function UsersTable() {
 
     // // Filtrez l'utilisateur supprimé de l'état local
     // setUsers((prevUsers) => prevUsers.filter((user) => user.id !== userId));
-    deleteUser(userId, setUsers);
+    deleteUser(
+      userId,
+      setUsers,
+      setSnackbarMessage,
+      setSnackbarSeverity,
+      setSnackbarOpen
+    );
   };
 
   const handleBlockUser = async (userId) => {
@@ -143,7 +179,12 @@ export default function UsersTable() {
       // Mettre à jour localement l'état de l'utilisateur
       updatedUsers[userIndex].status = false;
       setUsers(updatedUsers);
-      changeUserState(userId);
+      changeUserState(
+        userId,
+        setSnackbarMessage,
+        setSnackbarSeverity,
+        setSnackbarOpen
+      );
     }
   };
 
@@ -155,7 +196,12 @@ export default function UsersTable() {
       // Mettre à jour localement l'état de l'utilisateur
       updatedUsers[userIndex].status = true;
       setUsers(updatedUsers);
-      changeUserState(userId);
+      changeUserState(
+        userId,
+        setSnackbarMessage,
+        setSnackbarSeverity,
+        setSnackbarOpen
+      );
     }
   };
 
@@ -300,6 +346,13 @@ export default function UsersTable() {
           ) : null
         )}
       </div>
+      <CustomSnackbar
+        open={snackbarOpen}
+        message={snackbarMessage}
+        severity={snackbarSeverity}
+        onClose={handleCloseSnackbar}
+        anchorOrigin={{ vertical: "top", horizontal: "right" }} // Positionnez le Snackbar à gauche
+      />
     </div>
   );
 }
