@@ -14,6 +14,7 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import EditIcon from "@mui/icons-material/Edit";
 import SaveIcon from "@mui/icons-material/Save";
 import { axiosInstance } from "../AxiosInstance";
+import CustomSnackbar from "../Components/CustomSnackbar";
 
 // Mappage pour la rotation des mots de passe
 const passwordRotationMapping = {
@@ -60,7 +61,12 @@ async function getSettings(
   }
 }
 
-async function editPWDRotation(time) {
+async function editPWDRotation(
+  time,
+  setSnackbarMessage,
+  setSnackbarSeverity,
+  setSnackbarOpen
+) {
   try {
     let accessToken = sessionStorage.getItem("token");
     const response = await axiosInstance.put(
@@ -73,7 +79,9 @@ async function editPWDRotation(time) {
       }
     );
     if (response.status === 200) {
-      alert("Updated successfully");
+      setSnackbarMessage("Updated Successfully");
+      setSnackbarSeverity("success");
+      setSnackbarOpen(true);
     } else {
       alert("Error");
     }
@@ -82,7 +90,12 @@ async function editPWDRotation(time) {
   }
 }
 
-async function editLoginAttempts(time) {
+async function editLoginAttempts(
+  time,
+  setSnackbarMessage,
+  setSnackbarSeverity,
+  setSnackbarOpen
+) {
   try {
     let accessToken = sessionStorage.getItem("token");
     const response = await axiosInstance.put(
@@ -95,7 +108,9 @@ async function editLoginAttempts(time) {
       }
     );
     if (response.status === 200) {
-      alert("Updated successfully");
+      setSnackbarMessage("Updated Successfully");
+      setSnackbarSeverity("success");
+      setSnackbarOpen(true);
     } else {
       alert("Error");
     }
@@ -117,7 +132,7 @@ async function addNewExtension(extension) {
       }
     );
     if (response.status === 200) {
-      alert("Extension added successfully");
+      console.log("Extension added successfully");
     } else {
       alert("Error");
     }
@@ -139,7 +154,7 @@ async function addNewDomain(domain) {
       }
     );
     if (response.status === 200) {
-      alert("Domain added successfully");
+      console.log("Domain added successfully");
     } else {
       alert("Error");
     }
@@ -198,7 +213,7 @@ async function updateAllDomains() {
       }
     );
     if (response.status === 200) {
-      alert("All Domains state updated successfully ");
+      console.log("All Domains state updated successfully ");
     } else {
       alert("Error");
     }
@@ -210,7 +225,6 @@ async function updateAllDomains() {
 async function updateAllExtensions() {
   try {
     let accessToken = sessionStorage.getItem("token");
-    alert(accessToken);
     const response = await axiosInstance.put(
       `settings/all_extensions`,
       {},
@@ -221,7 +235,7 @@ async function updateAllExtensions() {
       }
     );
     if (response.status === 200) {
-      alert("All Extensions state updated successfully ");
+      console.log("All Extensions state updated successfully ");
     } else {
       alert("Error");
     }
@@ -244,6 +258,13 @@ const SettingsPage = () => {
   const [newDomain, setNewDomain] = useState("");
   const [acceptAllDomains, setAcceptAllDomains] = useState(false);
   const [acceptAllDomainsState, setAcceptAllDomainsState] = useState([]);
+  const [snackbarOpen, setSnackbarOpen] = React.useState(false);
+  const [snackbarMessage, setSnackbarMessage] = React.useState("");
+  const [snackbarSeverity, setSnackbarSeverity] = React.useState("success");
+
+  const handleCloseSnackbar = () => {
+    setSnackbarOpen(false);
+  };
 
   useEffect(() => {
     getSettings(
@@ -320,7 +341,12 @@ const SettingsPage = () => {
 
   const handleSaveRotationClick = () => {
     const selectedRotationValue = passwordRotationMapping[passwordRotation];
-    editPWDRotation(selectedRotationValue);
+    editPWDRotation(
+      selectedRotationValue,
+      setSnackbarMessage,
+      setSnackbarSeverity,
+      setSnackbarOpen
+    );
     setIsEditingRotation(false);
   };
 
@@ -330,7 +356,12 @@ const SettingsPage = () => {
 
   const handleSaveLoginAttemptsClick = () => {
     const valueToSend = maxLoginAttempts === "none" ? null : maxLoginAttempts;
-    editLoginAttempts(valueToSend);
+    editLoginAttempts(
+      valueToSend,
+      setSnackbarMessage,
+      setSnackbarSeverity,
+      setSnackbarOpen
+    );
     setIsEditingLoginAttempts(false);
   };
 
@@ -525,6 +556,13 @@ const SettingsPage = () => {
           </Paper>
         </Grid>
       </Grid>
+      <CustomSnackbar
+        open={snackbarOpen}
+        message={snackbarMessage}
+        severity={snackbarSeverity}
+        onClose={handleCloseSnackbar}
+        anchorOrigin={{ vertical: "top", horizontal: "right" }} // Positionnez le Snackbar à gauche
+      />
     </Box>
   );
 };
