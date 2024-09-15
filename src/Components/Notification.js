@@ -1,6 +1,5 @@
 import PropTypes from "prop-types";
-import { set, sub } from "date-fns";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { FaBell, FaCheck, FaClock, FaTag, FaUser } from "react-icons/fa";
 import {
   Box,
@@ -18,48 +17,83 @@ import {
   ListItemButton,
   ListItemText,
 } from "@mui/material";
+import { axiosInstance } from "../AxiosInstance";
+import NotificationItem from "./NotificationItem";
 
-// Notifications statiques pour les tests
-const STATIC_NOTIFICATIONS = [
-  {
-    _id: "1",
-    type: "fichier_recu",
-    contenu: "Vous avez recun un nouveau fichier.",
-    lien: "/offres/1",
-    date_creation: set(new Date(), { hours: 10, minutes: 30 }).toISOString(),
-    statut: "non lu",
-  },
-  {
-    _id: "2",
-    type: "fichier_recu",
-    contenu: "Vous avez recun un nouveau fichier.",
-    lien: "/offres/2",
-    date_creation: sub(new Date(), { hours: 3, minutes: 30 }).toISOString(),
-    statut: "non lu",
-  },
-  {
-    _id: "3",
-    type: "candidature_refusee",
-    contenu: "Candidature refusée.",
-    lien: "/offres/2",
-    date_creation: sub(new Date(), { hours: 3, minutes: 30 }).toISOString(),
-    statut: "non lu",
-  },
-  {
-    _id: "4",
-    type: "candidature_refusee",
-    contenu: "Candidature refusée.",
-    lien: "/offres/2",
-    date_creation: sub(new Date(), { hours: 3, minutes: 30 }).toISOString(),
-    statut: "non lu",
-  },
-];
+async function getNotifications(setNotifications) {
+  try {
+    let accessToken = sessionStorage.getItem("token");
+
+    const response = await axiosInstance.get(`/notification/admin`, {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+
+    if (response.status === 200) {
+      const sortedNotifications = response.data.sort(
+        (a, b) => new Date(b.date) - new Date(a.date)
+      ); // Trier par date du plus récent au plus ancien
+      setNotifications(sortedNotifications);
+    } else {
+      console.log("Internal server error");
+    }
+  } catch (e) {
+    console.error(e);
+  }
+}
+
+async function markNotificationAsRead(id) {
+  try {
+    let accessToken = sessionStorage.getItem("token");
+
+    const response = await axiosInstance.put(
+      `/notification/admin/${id}`,
+      {},
+      {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      }
+    );
+
+    if (response.status === 200) {
+      console.log("Notification marked as read successfully");
+    } else {
+      console.log("Internal server error");
+    }
+  } catch (e) {
+    console.error(e);
+  }
+}
+
+async function markAllNotificationsAsRead() {
+  try {
+    let accessToken = sessionStorage.getItem("token");
+
+    const response = await axiosInstance.put(
+      `/notification/admin/`,
+      {},
+      {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      }
+    );
+
+    if (response.status === 200) {
+      console.log("Notification marked as read successfully");
+    } else {
+      console.log("Internal server error");
+    }
+  } catch (e) {
+    console.error(e);
+  }
+}
 
 export default function Notifications() {
-  const [notifications, setNotifications] = useState(STATIC_NOTIFICATIONS);
-  const totalUnRead = notifications.filter(
-    (item) => item.statut === "non lu"
-  ).length;
+  const [notifications, setNotifications] = useState([]);
+  const totalUnRead = notifications.filter((item) => item.unread).length;
 
   const [open, setOpen] = useState(null);
 
@@ -72,23 +106,29 @@ export default function Notifications() {
   };
 
   const handleMarkAllAsRead = () => {
+    markAllNotificationsAsRead();
     setNotifications(
       notifications.map((notification) => ({
         ...notification,
-        statut: "lu",
+        unread: false,
       }))
     );
   };
 
   const handleMarkAsRead = (id) => {
+    markNotificationAsRead(id);
     setNotifications(
       notifications.map((notification) =>
-        notification._id === id
-          ? { ...notification, statut: "lu" }
+        notification.id === id
+          ? { ...notification, unread: false }
           : notification
       )
     );
   };
+
+  useEffect(() => {
+    getNotifications(setNotifications);
+  }, []);
 
   return (
     <>
@@ -135,106 +175,33 @@ export default function Notifications() {
 
         <Divider sx={{ borderStyle: "dashed" }} />
 
-        <List
-          disablePadding
-          subheader={
-            <ListSubheader
-              disableSticky
-              sx={{ py: 1, px: 2.5, typography: "overline" }}
-            >
-              Nouveau
-            </ListSubheader>
-          }
+        <Box
+          sx={{
+            maxHeight: 400,
+            overflowY: "auto",
+          }}
         >
-          {notifications.slice(0, 2).map((notification) => (
-            <NotificationItem
-              key={notification._id}
-              notification={notification}
-              onMarkAsRead={handleMarkAsRead}
-            />
-          ))}
-        </List>
-
-        <Divider sx={{ borderStyle: "dashed" }} />
-
-        <Box sx={{ p: 1 }}>
-          <Button fullWidth disableRipple>
-            Voir tout
-          </Button>
+          <List
+            disablePadding
+            subheader={
+              <ListSubheader
+                disableSticky
+                sx={{ py: 1, px: 2.5, typography: "overline" }}
+              >
+                Nouveau
+              </ListSubheader>
+            }
+          >
+            {notifications.map((notification) => (
+              <NotificationItem
+                key={notification.id}
+                notification={notification}
+                onMarkAsRead={handleMarkAsRead}
+              />
+            ))}
+          </List>
         </Box>
       </Popover>
     </>
   );
-}
-
-NotificationItem.propTypes = {
-  notification: PropTypes.shape({
-    _id: PropTypes.string,
-    type: PropTypes.string,
-    contenu: PropTypes.string,
-    date_creation: PropTypes.string,
-    statut: PropTypes.string,
-    lien: PropTypes.string,
-  }),
-  onMarkAsRead: PropTypes.func,
-};
-
-function NotificationItem({ notification, onMarkAsRead }) {
-  const { avatar, title } = renderContent(notification);
-
-  const handleNotificationClick = () => {
-    onMarkAsRead(notification._id);
-    window.location.href = notification.lien;
-  };
-
-  return (
-    <ListItemButton
-      onClick={handleNotificationClick}
-      sx={{
-        py: 1.5,
-        px: 2.5,
-        mt: "1px",
-        ...(notification.statut === "non lu" && {
-          bgcolor: "action.selected",
-        }),
-      }}
-    >
-      <ListItemAvatar>
-        <Avatar sx={{ bgcolor: "background.neutral" }}>{avatar}</Avatar>
-      </ListItemAvatar>
-      <ListItemText
-        primary={title}
-        secondary={
-          <Typography
-            variant="caption"
-            sx={{
-              mt: 0.5,
-              display: "flex",
-              alignItems: "center",
-              color: "text.disabled",
-            }}
-          >
-            <FaClock className="mr-1" />
-            {"February 24, 2024"}
-          </Typography>
-        }
-      />
-    </ListItemButton>
-  );
-}
-
-function renderContent(notification) {
-  let avatar;
-  switch (notification.type) {
-    case "nouvelle_offre":
-      avatar = <FaTag />;
-      break;
-    case "candidature_refusee":
-      avatar = <FaUser />;
-      break;
-    default:
-      avatar = <FaBell />;
-  }
-  let title = notification.contenu;
-  return { avatar, title };
 }

@@ -25,6 +25,7 @@ import {
   validatePasswordPolicy,
   validatePhoneNumber,
 } from "../utils";
+import { GridCloseIcon } from "@mui/x-data-grid";
 
 async function getFileStats(setFileCounts, setUsedStorage, id) {
   try {
@@ -44,7 +45,7 @@ async function getFileStats(setFileCounts, setUsedStorage, id) {
   }
 }
 
-const UserDetails = ({ user, setUsers }) => {
+const UserDetails = ({ user, setUsers, onClose }) => {
   const [fileCounts, setFileCounts] = useState();
   const [usedStorage, setUsedStorage] = useState();
   const [totalStorage, setTotalStorage] = useState(user.storage);
@@ -184,6 +185,13 @@ const UserDetails = ({ user, setUsers }) => {
         bgcolor: grey[100],
       }}
     >
+      <IconButton
+        onClick={onClose}
+        style={{ position: "absolute", top: "10px", right: "10px" }}
+        aria-label="close"
+      >
+        <GridCloseIcon />
+      </IconButton>
       <Card elevation={3} sx={{ borderRadius: 2, mb: 3, bgcolor: teal[100] }}>
         <CardContent sx={{ display: "flex", alignItems: "center" }}>
           <Avatar
