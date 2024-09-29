@@ -45,7 +45,14 @@ async function getFileStats(setFileCounts, setUsedStorage, id) {
   }
 }
 
-const UserDetails = ({ user, setUsers, onClose }) => {
+const UserDetails = ({
+  user,
+  setUsers,
+  onClose,
+  setSnackbarMessage,
+  setSnackbarSeverity,
+  setSnackbarOpen,
+}) => {
   const [fileCounts, setFileCounts] = useState();
   const [usedStorage, setUsedStorage] = useState();
   const [totalStorage, setTotalStorage] = useState(user.storage);
@@ -115,7 +122,10 @@ const UserDetails = ({ user, setUsers, onClose }) => {
       );
 
       if (response.status === 200) {
-        alert("User information updated successfully!");
+        setSnackbarMessage("User information updated successfully!");
+        setSnackbarSeverity("success");
+        setSnackbarOpen(true);
+        console.log("User information updated successfully!");
 
         // Mettre à jour l'utilisateur modifié dans la liste `users`
         setUsers((prevUsers) =>
@@ -152,7 +162,12 @@ const UserDetails = ({ user, setUsers, onClose }) => {
       newLimitInBytes = newStorage * 1024 * 1024; // Convert MB to bytes
     }
     if (newLimitInBytes < usedStorage) {
-      alert("Le nouveau stockage ne peut être inférieur au stockage utilisé.");
+      setSnackbarMessage("New storage value cannot be less than used storage.");
+      setSnackbarSeverity("error");
+      setSnackbarOpen(true);
+      console.log(
+        "Le nouveau stockage ne peut être inférieur au stockage utilisé."
+      );
     } else {
       setTotalStorage(newLimitInBytes);
       try {
@@ -168,7 +183,10 @@ const UserDetails = ({ user, setUsers, onClose }) => {
             },
           }
         );
-        alert("Storage limit updated successfully!");
+        setSnackbarMessage("Storage limit updated successfully!");
+        setSnackbarSeverity("success");
+        setSnackbarOpen(true);
+        console.log("Storage limit updated successfully!");
       } catch (e) {
         alert("Error updating storage limit.");
       }

@@ -341,6 +341,9 @@ export default function UsersTable() {
                 user={users.find((user) => user.id === item)}
                 setUsers={setUsers}
                 onClose={handleCloseDetails}
+                setSnackbarMessage={setSnackbarMessage}
+                setSnackbarSeverity={setSnackbarSeverity}
+                setSnackbarOpen={setSnackbarOpen}
               />
             </animated.div>
           ) : null
